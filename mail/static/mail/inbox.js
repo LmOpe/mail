@@ -28,6 +28,8 @@ function compose_email() {
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
   document.querySelector('#view-mail').style.display = 'none';
+  document.querySelector('#archive').style.display = 'none';
+  document.querySelector('#unarchive').style.display = 'none';
 
   // Clear out composition fields
   document.querySelector('#compose-recipients').value = '';
@@ -41,6 +43,8 @@ function load_mailbox(mailbox) {
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
   document.querySelector('#view-mail').style.display = 'none';
+  document.querySelector('#archive').style.display = 'none';
+  document.querySelector('#unarchive').style.display = 'none';
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
@@ -109,11 +113,10 @@ function populate(mailbox) {
           fetch(`/emails/${email.id}`)
             .then(response => response.json())
             .then(emails => {
-              console.log(emails);
               viewEmail(emails);
 
               // Update the mail to read
-              if (email.read == false){
+              if (email.read == false) {
                 fetch(`/emails/${email.id}`, {
                   method: 'PUT',
                   body: JSON.stringify({
@@ -122,6 +125,56 @@ function populate(mailbox) {
                 })
               }
             })
+          if (mailbox === 'inbox') {
+            const archive = document.createElement('button');
+            archive.innerHTML = 'Archive';
+            archive.setAttribute('class', 'archive');
+            if (document.querySelector('#archive').childElementCount === 0) {
+              document.querySelector('#archive').append(archive);
+            }
+            else {
+              document.querySelector('#archive').replaceChild(archive, document.querySelector('.archive'));
+            }
+            document.querySelector('#archive').style.display = 'block';
+            // Listen for click event on archive button
+            document.querySelector('.archive').onclick = () => {
+              // Update the mail to archived
+              if (email.archived == false) {
+                fetch(`/emails/${email.id}`, {
+                  method: 'PUT',
+                  body: JSON.stringify({
+                    archived: 'True'
+                  })
+                })
+                load_mailbox('inbox');
+              }
+            }
+          }
+          else if (mailbox === 'archive') {
+            unarchive = document.createElement('button');
+            unarchive.innerHTML = 'Unarchive';
+            unarchive.setAttribute('class', 'unarchive');
+            if (document.querySelector('#unarchive').childElementCount === 0) {
+              document.querySelector('#unarchive').append(unarchive);
+            }
+            else {
+              document.querySelector('#unarchive').replaceChild(unarchive, document.querySelector('.unarchive'));
+            }
+            document.querySelector('#unarchive').style.display = 'block';
+            // Listen for click event on archive button
+            document.querySelector('.unarchive').onclick = () => {
+              // Update the mail to archived
+              if (email.archived == true) {
+                fetch(`/emails/${email.id}`, {
+                  method: 'PUT',
+                  body: JSON.stringify({
+                    archived: 'False'
+                  })
+                })
+                load_mailbox('inbox');
+              }
+            }
+          }
         };
         console.log(element);
         document.querySelector('#emails-view').append(element);
@@ -151,10 +204,10 @@ function viewEmail(emails) {
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'none';
   document.querySelector('#view-mail').style.display = 'block';
-  if (document.querySelector('#view-mail').childElementCount === 0){
+  if (document.querySelector('#view-mail').childElementCount === 0) {
     document.querySelector('#view-mail').append(head, hr, content);
   }
-  else{
+  else {
     document.querySelector('#view-mail').replaceChildren(head, hr, content);
   }
 }
