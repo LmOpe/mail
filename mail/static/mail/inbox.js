@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
   document.querySelector('#compose').addEventListener('click', compose_email);
 
-  // // By default, load the inbox
+  // By default, load the inbox
   load_mailbox('inbox');
 
   // Send mail on submit
@@ -42,6 +42,17 @@ function load_mailbox(mailbox) {
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+
+  // When user visits their mailbox, populate the mialbox with the appropriate mails
+  if (mailbox == 'inbox'){
+    populate('inbox');
+  }
+  else if(mailbox == 'sent'){
+    populate('sent');
+  }
+  else if(mailbox == 'archive'){
+    populate('archive');
+  }
 }
 
 
@@ -58,7 +69,7 @@ function send_mail(recipients, subject, body) {
     .then(response => response.json())
     .then(result => {
       
-      // Print result
+      // Respond with error or success
       error = result.error;
       success = result.message;
       if (success != null){
@@ -68,6 +79,33 @@ function send_mail(recipients, subject, body) {
       else{
         document.querySelector('#response').innerHTML = error;
       }
-      
+    });
+}
+
+// send get request to server and use the response appropriately
+function populate(mailbox){
+    fetch(`/emails/${mailbox}`)
+    .then(response => response.json())
+    .then(emails => {
+      console.log(emails);
+      emails.forEach((email) => {
+        const element = document.createElement('div');
+        const sender = document.createElement('b');
+        const subject = document.createElement('p');
+        const timestamp = document.createElement('p');
+        sender.innerHTML = email.sender;
+        subject.innerHTML = email.subject;
+        timestamp.innerHTML = email.timestamp;
+        element.append(sender, subject, timestamp);
+        if (email.read){
+          element.style.background = 'gray';
+        }
+        else{
+          element.style.background = 'white';
+        }
+        console.log(element);
+        document.querySelector('#emails-view').append(element);
+      }
+      )
     });
 }
