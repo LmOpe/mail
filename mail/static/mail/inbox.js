@@ -30,6 +30,7 @@ function compose_email() {
   document.querySelector('#view-mail').style.display = 'none';
   document.querySelector('#archive').style.display = 'none';
   document.querySelector('#unarchive').style.display = 'none';
+  document.querySelector('#reply').style.display = 'none';
 
   // Clear out composition fields
   document.querySelector('#compose-recipients').value = '';
@@ -45,6 +46,7 @@ function load_mailbox(mailbox) {
   document.querySelector('#view-mail').style.display = 'none';
   document.querySelector('#archive').style.display = 'none';
   document.querySelector('#unarchive').style.display = 'none';
+  document.querySelector('#reply').style.display = 'none';
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
@@ -125,6 +127,13 @@ function populate(mailbox) {
                 })
               }
             })
+
+
+          //Display the reply button
+          reply(mailbox);
+          
+          
+
           if (mailbox === 'inbox') {
             const archive = document.createElement('button');
             archive.innerHTML = 'Archive';
@@ -135,6 +144,7 @@ function populate(mailbox) {
             else {
               document.querySelector('#archive').replaceChild(archive, document.querySelector('.archive'));
             }
+            // Set the button display to block
             document.querySelector('#archive').style.display = 'block';
             // Listen for click event on archive button
             document.querySelector('.archive').onclick = () => {
@@ -161,9 +171,9 @@ function populate(mailbox) {
               document.querySelector('#unarchive').replaceChild(unarchive, document.querySelector('.unarchive'));
             }
             document.querySelector('#unarchive').style.display = 'block';
-            // Listen for click event on archive button
+            // Listen for click event on unarchive button
             document.querySelector('.unarchive').onclick = () => {
-              // Update the mail to archived
+              // Update the mail to unarchived
               if (email.archived == true) {
                 fetch(`/emails/${email.id}`, {
                   method: 'PUT',
@@ -175,6 +185,19 @@ function populate(mailbox) {
               }
             }
           }
+
+          //Listen for click event on reply button
+          document.querySelector('#reply').onclick = () => {
+            compose_email();
+            document.querySelector('#compose-recipients').value = email.sender;
+            if (email.subject.includes("Re:")){
+              document.querySelector('#compose-subject').value = email.subject;
+            }
+            else{
+              document.querySelector('#compose-subject').value = `Re: ${email.subject}`;
+            }
+            document.querySelector('#compose-body').value = `on ${email.timestamp} ${email.sender} wrote: ${email.body}`;
+          };
         };
         console.log(element);
         document.querySelector('#emails-view').append(element);
@@ -210,4 +233,22 @@ function viewEmail(emails) {
   else {
     document.querySelector('#view-mail').replaceChildren(head, hr, content);
   }
+}
+
+
+// Create a function that displays the reply button
+function reply(mailbox){
+  const reply = document.createElement('button');
+  reply.innerHTML = 'Reply';
+  reply.setAttribute('class', 'reply');
+  if (document.querySelector('#reply').childElementCount === 0) {
+    document.querySelector('#reply').append(reply);
+  }
+  else {
+    document.querySelector('#reply').replaceChild(reply, document.querySelector('.reply'));
+  }
+// Set the button display to block
+if (mailbox != 'sent'){
+  document.querySelector('#reply').style.display = 'block';
+}
 }
